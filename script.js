@@ -14,9 +14,9 @@ const bombImg = new Image();
 bombImg.src = "assets/cone.png";
 
 // Game variables
-let cow = { x: 50, y: 150, width: 80, height: 80, dy: 0, jump: false };
+let cow = { x: 50, y: 300, width: 80, height: 80, dy: 0, jump: false };
 let gravity = 0.6;
-let ground = 160;
+let ground = 320;
 
 let coins = [];
 let bombs = [];
@@ -130,4 +130,5 @@ document.getElementById("restartBtn").addEventListener("click", () => {
 });
 
 loop();
+
 
