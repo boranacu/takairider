@@ -1,106 +1,175 @@
-const config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 400,
-  parent: "gameContainer",
-  physics: {
-    default: "arcade",
-    arcade: { gravity: { y: 1000 }, debug: false }
-  },
-  scene: { preload, create, update }
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let gameOver = false;
+let score = 0;
+
+// Load images
+const bg = new Image();
+bg.src = "assets/background.png";
+
+const riderPedal = new Image();
+riderPedal.src = "assets/rider_pedaling.png";
+
+const riderJump = new Image();
+riderJump.src = "assets/rider_jump.png";
+
+const coinImg = new Image();
+coinImg.src = "assets/coin.png";
+
+const bombImg = new Image();
+bombImg.src = "assets/bomb.png";
+
+const coneImg = new Image();
+coneImg.src = "assets/cone.png";
+
+// Rider properties
+let rider = {
+  x: 100,
+  y: 300,
+  width: 80,
+  height: 80,
+  dy: 0,
+  gravity: 0.6,
+  jumpPower: -12,
+  grounded: true,
+  jumping: false
 };
 
-let player, coins, cursors, scoreText, score = 0;
+// Obstacles & coins
+let obstacles = [];
+let coins = [];
 
-new Phaser.Game(config);
+// Background scrolling
+let bgX = 0;
 
-function preload() {
-  this.load.atlas("rider", "assets/rider.png", "assets/rider.json");
-  this.load.image("rider_jump", "assets/rider_jump.png");
-  this.load.spritesheet("coin", "assets/coin.png", { frameWidth: 190, frameHeight: 190 });
-  this.load.image("bg", "assets/bg.png");
-  this.load.image("cone", "assets/cone.png");
-  this.load.image("bomb", "assets/bomb.png");
+function drawBackground() {
+  bgX -= 2;
+  if (bgX <= -canvas.width) bgX = 0;
+  ctx.drawImage(bg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bg, bgX + canvas.width, 0, canvas.width, canvas.height);
 }
 
-function create() {
-  // Background
-  this.bg = this.add.tileSprite(0, 0, 800, 400, "bg").setOrigin(0,0).setScrollFactor(0);
-
-  // Player
-  player = this.physics.add.sprite(100, 300, "rider").setScale(0.3);
-  player.setCollideWorldBounds(true);
-
-  // Animations
-  this.anims.create({
-    key: "pedal",
-    frames: this.anims.generateFrameNames("rider", { prefix: "Ride", start: 0, end: 2 }),
-    frameRate: 8,
-    repeat: -1
-  });
-
-  this.anims.create({
-    key: "coin_spin",
-    frames: this.anims.generateFrameNumbers("coin", { start: 0, end: 5 }),
-    frameRate: 10,
-    repeat: -1
-  });
-
-  player.play("pedal");
-
-  // Input
-  cursors = this.input.keyboard.createCursorKeys();
-
-  // Groups
-  coins = this.physics.add.group();
-  this.time.addEvent({
-    delay: 2000,
-    callback: () => {
-      let coin = coins.create(800, Phaser.Math.Between(200, 350), "coin").setScale(0.5);
-      coin.play("coin_spin");
-      coin.setVelocityX(-200);
-    },
-    loop: true
-  });
-
-  obstacles = this.physics.add.group();
-  this.time.addEvent({
-    delay: 3000,
-    callback: () => {
-      let obstacle = obstacles.create(800, 350, Phaser.Math.Between(0,1) ? "cone" : "bomb").setScale(0.2);
-      obstacle.setVelocityX(-200);
-      obstacle.setImmovable(true);
-    },
-    loop: true
-  });
-
-  // Collisions
-  this.physics.add.overlap(player, coins, (p, coin) => {
-    coin.destroy();
-    score += 10;
-    scoreText.setText("Score: " + score);
-  });
-
-  this.physics.add.collider(player, obstacles, () => {
-    this.physics.pause();
-    player.setTint(0xff0000);
-    player.anims.stop();
-    scoreText.setText("Game Over! Final Score: " + score);
-  });
-
-  // Score text
-  scoreText = this.add.text(20, 20, "Score: 0", { fontSize: "24px", fill: "#fff" });
+// Draw rider
+function drawRider() {
+  const img = rider.jumping ? riderJump : riderPedal;
+  ctx.drawImage(img, rider.x, rider.y, rider.width, rider.height);
 }
 
+// Spawn obstacles
+function spawnObstacle() {
+  let type = Math.random() < 0.5 ? "bomb" : "cone";
+  obstacles.push({
+    x: canvas.width,
+    y: 320,
+    width: 50,
+    height: 50,
+    img: type === "bomb" ? bombImg : coneImg
+  });
+}
+
+// Spawn coins
+function spawnCoin() {
+  coins.push({
+    x: canvas.width,
+    y: 250,
+    width: 40,
+    height: 40,
+    img: coinImg
+  });
+}
+
+// Update game
 function update() {
-  this.bg.tilePositionX += 2;
+  if (gameOver) return;
 
-  if (cursors.space.isDown && player.body.touching.down) {
-    player.setVelocityY(-500);
-    player.setTexture("rider_jump"); // show jump pose
+  // Gravity
+  rider.y += rider.dy;
+  rider.dy += rider.gravity;
+
+  if (rider.y >= 300) {
+    rider.y = 300;
+    rider.grounded = true;
+    rider.jumping = false;
   }
 
-  if (player.body.touching.down && !player.anims.isPlaying) {
-    player.play("pedal");
+  // Move obstacles
+  obstacles.forEach((ob, i) => {
+    ob.x -= 5;
+    if (ob.x + ob.width < 0) obstacles.splice(i, 1);
+
+    // Collision check
+    if (
+      rider.x < ob.x + ob.width &&
+      rider.x + rider.width > ob.x &&
+      rider.y < ob.y + ob.height &&
+      rider.y + rider.height > ob.y
+    ) {
+      gameOver = true;
+    }
+  });
+
+  // Move coins
+  coins.forEach((c, i) => {
+    c.x -= 5;
+    if (c.x + c.width < 0) coins.splice(i, 1);
+
+    // Collision check
+    if (
+      rider.x < c.x + c.width &&
+      rider.x + rider.width > c.x &&
+      rider.y < c.y + c.height &&
+      rider.y + rider.height > c.y
+    ) {
+      score += 10;
+      coins.splice(i, 1);
+    }
+  });
+
+  // Spawn
+  if (Math.random() < 0.01) spawnObstacle();
+  if (Math.random() < 0.02) spawnCoin();
+}
+
+// Draw everything
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawBackground();
+  drawRider();
+
+  // Obstacles
+  obstacles.forEach(ob => ctx.drawImage(ob.img, ob.x, ob.y, ob.width, ob.height));
+
+  // Coins
+  coins.forEach(c => ctx.drawImage(c.img, c.x, c.y, c.width, c.height));
+
+  // Score
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px Arial";
+  ctx.fillText("Score: " + score, 20, 30);
+
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
   }
 }
+
+// Game loop
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+
+// Controls
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && rider.grounded) {
+    rider.dy = rider.jumpPower;
+    rider.grounded = false;
+    rider.jumping = true;
+  }
+});
