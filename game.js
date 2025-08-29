@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cow Runner</title>
+  <title>TAKAI Rider</title>
   <style>
     body {
       margin: 0;
@@ -27,10 +27,10 @@
     const ctx = canvas.getContext("2d");
 
     // Load images
-    const cowImg = new Image();
-    cowImg.src = "cow.png"; // standing/running cow
-    const cowJumpImg = new Image();
-    cowJumpImg.src = "cow_jump.png"; // jumping cow
+    const riderImg = new Image();
+    riderImg.src = "rider_pedaling.png"; // standing/running cow
+    const riderJumpImg = new Image();
+    riderJumpImg.src = "rider_jump.png"; // jumping cow
     const coinImg = new Image();
     coinImg.src = "coin.png";
     const bombImg = new Image();
@@ -39,7 +39,7 @@
     coneImg.src = "cone.png"; // new obstacle
 
     // Cow settings
-    let cow = {
+    let rider = {
       x: 50,
       y: 300,
       width: 50,
@@ -56,11 +56,11 @@
     let gameOver = false;
     let frame = 0;
 
-    function drawCow() {
-      if (cow.isJumping) {
-        ctx.drawImage(cowJumpImg, cow.x, cow.y, cow.width, cow.height);
+    function drawRider() {
+      if (rider.isJumping) {
+        ctx.drawImage(riderJumpImg, rider.x, rider.y, rider.width, rider.height);
       } else {
-        ctx.drawImage(cowImg, cow.x, cow.y, cow.width, cow.height);
+        ctx.drawImage(riderImg, rider.x, rider.y, rider.width, rider.height);
       }
     }
 
@@ -86,12 +86,12 @@
       ctx.fillRect(0, 350, canvas.width, 50);
 
       // Update cow
-      cow.y += cow.dy;
-      cow.dy += cow.gravity;
-      if (cow.y > 300) {
-        cow.y = 300;
-        cow.dy = 0;
-        cow.isJumping = false;
+      rider.y += rider.dy;
+      rider.dy += rider.gravity;
+      if (rider.y > 300) {
+        rider.y = 300;
+        rider.dy = 0;
+        rider.isJumping = false;
       }
 
       // Spawn coins
@@ -109,10 +109,10 @@
       coins.forEach((coin, index) => {
         coin.x -= 5;
         if (
-          cow.x < coin.x + coin.size &&
-          cow.x + cow.width > coin.x &&
-          cow.y < coin.y + coin.size &&
-          cow.y + cow.height > coin.y
+          rider.x < coin.x + coin.size &&
+          rider.x + rider.width > coin.x &&
+          rider.y < coin.y + coin.size &&
+          rider.y + rider.height > coin.y
         ) {
           coins.splice(index, 1);
           score++;
@@ -123,16 +123,16 @@
       obstacles.forEach((obs, index) => {
         obs.x -= 6;
         if (
-          cow.x < obs.x + obs.size &&
-          cow.x + cow.width > obs.x &&
-          cow.y < obs.y + obs.size &&
-          cow.y + cow.height > obs.y
+          rider.x < obs.x + obs.size &&
+          rider.x + rider.width > obs.x &&
+          rider.y < obs.y + obs.size &&
+          rider.y + rider.height > obs.y
         ) {
           gameOver = true;
         }
       });
 
-      drawCow();
+      drawRider();
       drawCoins();
       drawObstacles();
 
@@ -146,17 +146,17 @@
     }
 
     document.addEventListener("keydown", e => {
-      if (e.code === "Space" && !cow.isJumping) {
-        cow.dy = cow.jumpPower;
-        cow.isJumping = true;
+      if (e.code === "Space" && !rider.isJumping) {
+        rider.dy = rider.jumpPower;
+        rider.isJumping = true;
       }
       if (gameOver && e.code === "Enter") {
         // restart
         coins = [];
         obstacles = [];
         score = 0;
-        cow.y = 300;
-        cow.dy = 0;
+        rider.y = 300;
+        rider.dy = 0;
         gameOver = false;
         update();
       }
@@ -166,3 +166,4 @@
   </script>
 </body>
 </html>
+
