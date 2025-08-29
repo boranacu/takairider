@@ -1,175 +1,168 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-let gameOver = false;
-let score = 0;
-
-// Load images
-const bg = new Image();
-bg.src = "assets/background.png";
-
-const riderPedal = new Image();
-riderPedal.src = "assets/rider_pedaling.png";
-
-const riderJump = new Image();
-riderJump.src = "assets/rider_jump.png";
-
-const coinImg = new Image();
-coinImg.src = "assets/coin.png";
-
-const bombImg = new Image();
-bombImg.src = "assets/bomb.png";
-
-const coneImg = new Image();
-coneImg.src = "assets/cone.png";
-
-// Rider properties
-let rider = {
-  x: 100,
-  y: 300,
-  width: 80,
-  height: 80,
-  dy: 0,
-  gravity: 0.6,
-  jumpPower: -12,
-  grounded: true,
-  jumping: false
-};
-
-// Obstacles & coins
-let obstacles = [];
-let coins = [];
-
-// Background scrolling
-let bgX = 0;
-
-function drawBackground() {
-  bgX -= 2;
-  if (bgX <= -canvas.width) bgX = 0;
-  ctx.drawImage(bg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(bg, bgX + canvas.width, 0, canvas.width, canvas.height);
-}
-
-// Draw rider
-function drawRider() {
-  const img = rider.jumping ? riderJump : riderPedal;
-  ctx.drawImage(img, rider.x, rider.y, rider.width, rider.height);
-}
-
-// Spawn obstacles
-function spawnObstacle() {
-  let type = Math.random() < 0.5 ? "bomb" : "cone";
-  obstacles.push({
-    x: canvas.width,
-    y: 320,
-    width: 50,
-    height: 50,
-    img: type === "bomb" ? bombImg : coneImg
-  });
-}
-
-// Spawn coins
-function spawnCoin() {
-  coins.push({
-    x: canvas.width,
-    y: 250,
-    width: 40,
-    height: 40,
-    img: coinImg
-  });
-}
-
-// Update game
-function update() {
-  if (gameOver) return;
-
-  // Gravity
-  rider.y += rider.dy;
-  rider.dy += rider.gravity;
-
-  if (rider.y >= 300) {
-    rider.y = 300;
-    rider.grounded = true;
-    rider.jumping = false;
-  }
-
-  // Move obstacles
-  obstacles.forEach((ob, i) => {
-    ob.x -= 5;
-    if (ob.x + ob.width < 0) obstacles.splice(i, 1);
-
-    // Collision check
-    if (
-      rider.x < ob.x + ob.width &&
-      rider.x + rider.width > ob.x &&
-      rider.y < ob.y + ob.height &&
-      rider.y + rider.height > ob.y
-    ) {
-      gameOver = true;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cow Runner</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f0f0f0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
     }
-  });
-
-  // Move coins
-  coins.forEach((c, i) => {
-    c.x -= 5;
-    if (c.x + c.width < 0) coins.splice(i, 1);
-
-    // Collision check
-    if (
-      rider.x < c.x + c.width &&
-      rider.x + rider.width > c.x &&
-      rider.y < c.y + c.height &&
-      rider.y + rider.height > c.y
-    ) {
-      score += 10;
-      coins.splice(i, 1);
+    canvas {
+      display: block;
+      margin: auto;
+      background: #cceeff;
+      border: 2px solid #333;
     }
-  });
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  // Spawn
-  if (Math.random() < 0.01) spawnObstacle();
-  if (Math.random() < 0.02) spawnCoin();
-}
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-// Draw everything
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Load images
+    const cowImg = new Image();
+    cowImg.src = "cow.png"; // standing/running cow
+    const cowJumpImg = new Image();
+    cowJumpImg.src = "cow_jump.png"; // jumping cow
+    const coinImg = new Image();
+    coinImg.src = "coin.png";
+    const bombImg = new Image();
+    bombImg.src = "bomb.png";
+    const coneImg = new Image();
+    coneImg.src = "cone.png"; // new obstacle
 
-  drawBackground();
-  drawRider();
+    // Cow settings
+    let cow = {
+      x: 50,
+      y: 300,
+      width: 50,
+      height: 50,
+      dy: 0,
+      gravity: 0.8,
+      jumpPower: -12,
+      isJumping: false
+    };
 
-  // Obstacles
-  obstacles.forEach(ob => ctx.drawImage(ob.img, ob.x, ob.y, ob.width, ob.height));
+    let coins = [];
+    let obstacles = [];
+    let score = 0;
+    let gameOver = false;
+    let frame = 0;
 
-  // Coins
-  coins.forEach(c => ctx.drawImage(c.img, c.x, c.y, c.width, c.height));
+    function drawCow() {
+      if (cow.isJumping) {
+        ctx.drawImage(cowJumpImg, cow.x, cow.y, cow.width, cow.height);
+      } else {
+        ctx.drawImage(cowImg, cow.x, cow.y, cow.width, cow.height);
+      }
+    }
 
-  // Score
-  ctx.fillStyle = "#fff";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 20, 30);
+    function drawCoins() {
+      coins.forEach(coin => {
+        ctx.drawImage(coinImg, coin.x, coin.y, coin.size, coin.size);
+      });
+    }
 
-  if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "40px Arial";
-    ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
-  }
-}
+    function drawObstacles() {
+      obstacles.forEach(obs => {
+        ctx.drawImage(obs.type === "bomb" ? bombImg : coneImg, obs.x, obs.y, obs.size, obs.size);
+      });
+    }
 
-// Game loop
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
+    function update() {
+      if (gameOver) return;
 
-loop();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// Controls
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" && rider.grounded) {
-    rider.dy = rider.jumpPower;
-    rider.grounded = false;
-    rider.jumping = true;
-  }
-});
+      // Draw ground
+      ctx.fillStyle = "#44aa44";
+      ctx.fillRect(0, 350, canvas.width, 50);
+
+      // Update cow
+      cow.y += cow.dy;
+      cow.dy += cow.gravity;
+      if (cow.y > 300) {
+        cow.y = 300;
+        cow.dy = 0;
+        cow.isJumping = false;
+      }
+
+      // Spawn coins
+      if (frame % 100 === 0) {
+        coins.push({ x: canvas.width, y: 280, size: 30 });
+      }
+
+      // Spawn obstacles (bombs and cones)
+      if (frame % 150 === 0) {
+        const type = Math.random() > 0.5 ? "bomb" : "cone";
+        obstacles.push({ x: canvas.width, y: 300, size: 40, type: type });
+      }
+
+      // Update coins
+      coins.forEach((coin, index) => {
+        coin.x -= 5;
+        if (
+          cow.x < coin.x + coin.size &&
+          cow.x + cow.width > coin.x &&
+          cow.y < coin.y + coin.size &&
+          cow.y + cow.height > coin.y
+        ) {
+          coins.splice(index, 1);
+          score++;
+        }
+      });
+
+      // Update obstacles
+      obstacles.forEach((obs, index) => {
+        obs.x -= 6;
+        if (
+          cow.x < obs.x + obs.size &&
+          cow.x + cow.width > obs.x &&
+          cow.y < obs.y + obs.size &&
+          cow.y + cow.height > obs.y
+        ) {
+          gameOver = true;
+        }
+      });
+
+      drawCow();
+      drawCoins();
+      drawObstacles();
+
+      // Score
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 20, 30);
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" && !cow.isJumping) {
+        cow.dy = cow.jumpPower;
+        cow.isJumping = true;
+      }
+      if (gameOver && e.code === "Enter") {
+        // restart
+        coins = [];
+        obstacles = [];
+        score = 0;
+        cow.y = 300;
+        cow.dy = 0;
+        gameOver = false;
+        update();
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
