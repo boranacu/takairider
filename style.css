@@ -1,13 +1,28 @@
 body {
-  margin: 0;
-  padding: 0;
-  background: #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  background: #f0f8ff;
 }
-canvas {
-  border: 2px solid #fff;
-  background: #222;
+
+#game {
+  display: inline-block;
+  position: relative;
+}
+
+#gameCanvas {
+  background: #dfffd6;
+  border: 3px solid #333;
+}
+
+#score {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#restartBtn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 18px;
+  cursor: pointer;
 }
