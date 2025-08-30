@@ -3,15 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <title>TAKAI Rider</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #eee;
+      margin: 0;
+    }
+    canvas {
+      border: 2px solid #333;
+      background: #fff;
+    }
+  </style>
 </head>
 <body>
-  <h1>TAKAI Rider 🚴</h1>
-  <div id="game">
-    <canvas id="gameCanvas"></canvas>
-    <div id="score">Score: 0</div>
-    <button id="restartBtn" style="display:none;">Restart</button>
-  </div>
-  <script src="script.js"></script>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <script src="game.js"></script>
 </body>
 </html>
