@@ -1,7 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 1200;
-canvas.height = 400;
+canvas.width = 600;
+canvas.height = 200;
 
 // Load images
 const cowImg = new Image();
@@ -14,9 +14,9 @@ const bombImg = new Image();
 bombImg.src = "assets/cone.png";
 
 // Game variables
-let cow = { x: 50, y: 300, width: 80, height: 80, dy: 0, jump: false };
+let cow = { x: 50, y: 150, width: 40, height: 40, dy: 0, jump: false };
 let gravity = 0.6;
-let ground = 320;
+let ground = 160;
 
 let coins = [];
 let bombs = [];
@@ -130,5 +130,3 @@ document.getElementById("restartBtn").addEventListener("click", () => {
 });
 
 loop();
-
-
